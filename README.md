@@ -26,7 +26,7 @@ func main () {
 
 Wilson-Score Interval formula is displayed below:
 
-![Wilson Score Interval]("/assets/wilson-score-interval.png")
+![Wilson Score Interval](/assets/wilson-score-interval.png)
 
 - `p-hat` is the fraction of positive votes out of the total votes
 - `n` is the total number of upvotes and downvotes
@@ -91,7 +91,9 @@ Here we can conclude several things:
 
 ## Hot Ranking Algorithm
 
-![Hot Ranking]("/assets/hot.png")
+Hot Ranking algorithm is described below:
+
+![Hot Ranking](/assets/hot.png)
 
 This is the same algorithm that is used by Reddit to rank their stories. It takes the account of submission time into the ranking. What this means is:
 

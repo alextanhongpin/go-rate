@@ -17,6 +17,27 @@ func Wilson(upvotes, downvotes int64) float64 {
 	return lower
 }
 
+// Votes returns the score from sorting (which includes negative scores too)
+// http://nbviewer.jupyter.org/github/CamDavidsonPilon/Probabilistic-Programming-and-Bayesian-Methods-for-Hackers/blob/master/Chapter4_TheGreatestTheoremNeverTold/Ch4_LawOfLargeNumbers_PyMC3.ipynb
+func Votes(upvotes, downvotes int64) float64 {
+	a := float64(1 + upvotes)
+	b := float64(1 + downvotes)
+	mu := a / (a + b)
+	stdErr := 1.65 * math.Sqrt((a*b)/(math.Pow(a+b, 2)*(a+b+1)))
+	return mu - stdErr
+}
+
+// Stars return the scores for star ratings
+func Stars(n, s int64) float64 {
+	// s is sum of all the ratings
+	// n is the number of users who rated
+	a := float64(1 + s)
+	b := float64(1 + n - s)
+	mu := a / (a + b)
+	stdErr := 1.65 * math.Sqrt((a*b)/(math.Pow(a+b, 2)*(a+b+1)))
+	return mu - stdErr
+}
+
 // Hot will return ranking based on the time it is created
 func Hot(upvotes, downvotes int64, date time.Time) float64 {
 	s := float64(upvotes - downvotes)

@@ -1,5 +1,7 @@
 # Ranking Algorithms
 
+[![](https://godoc.org/github.com/alextanhongpin/go-rate?status.svg)](https://godoc.org/alextanhongpin/go-rate)
+
 ## Installation
 
 ```

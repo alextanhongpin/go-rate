@@ -7,13 +7,16 @@ import (
 
 // Wilson will return the wilson-score interval based on the number of upvotes and downvotes
 func Wilson(upvotes, downvotes int64) float64 {
+	if upvotes == 0 && downvotes == 0 {
+		return 0.0
+	}
 	if upvotes == 0 {
-		return 0
+		return -Wilson(downvotes, upvotes)
 	}
 	n := float64(upvotes + downvotes)
 	phat := float64(upvotes) / n
 	z := float64(1.96) // for 0.95 confidentiality
-	lower := (phat + z*z/(2*n) - z*math.Sqrt(phat*(1-phat)+z*z/(4*n))/n) / (1 + z*z/n)
+	lower := (phat + z*z/(2*n) - z*math.Sqrt((phat*(1-phat)+z*z/(4*n))/n)) / (1 + z*z/n)
 	return lower
 }
 

@@ -44,7 +44,7 @@ func Wilson(upvotes, downvotes int64) float64 {
 	}
 	phat := float64(upvotes) / n
 	z := float64(1.96) // for 0.95 confidentiality
-	lower := (phat + z*z/(2*n) - z*math.Sqrt(phat*(1-phat)+z*z/(4*n))/n) / (1 + z*z/n)
+	lower := (phat + z*z/(2*n) - z*math.Sqrt((phat*(1-phat)+z*z/(4*n))/n)) / (1 + z*z/n)
 	return lower
 }
 ```
@@ -57,31 +57,100 @@ If upvotes is zero the score will be `0`. Note that if you implement the logic w
 3. upvotes=0 downvotes=0 score=0.000000
 ```
 
-The item with 100 downvotes should be placed lower then the items with zero vites. But since the range is only from 0 to 1, there is no such thing as negative scores. Once corrected, we get the following:
+
+
+The item with 100 downvotes should be placed lower then the items with zero vites. But since the range is only from 0 to 1, there is no such thing as negative scores.
+
+To fix this, we added another additional logic - swap the upvotes with downvotes, and turn the value to negative:
+
+```go
+	if upvotes == 0 {
+		return -Wilson(downvotes, upvotes)
+	}
+```
+Once corrected, we get the following:
 
 ```
-1. upvotes=0 downvotes=10 score=0.000000
-2. upvotes=0 downvotes=1 score=0.000000
+1. upvotes=0 downvotes=10 score=-0.722460
+2. upvotes=0 downvotes=1 score=-0.206543
 3. upvotes=0 downvotes=0 score=0.000000
 ```
 
 To test how the votes will affect the score, run the `Wilson` algorithm against different values of upvotes and downvotes.
 
+Sample code:
+```go
+package main
+
+import (
+	"fmt"
+	"math"
+	"sort"
+	"time"
+)
+
+type Result struct {
+	Upvotes   int64
+	Downvotes int64
+	Score     float64
+}
+
+func main() {
+	fmt.Println("Wilson Score Ranking")
+	fmt.Println("")
+
+	votes := []struct {
+		upvotes   int64
+		downvotes int64
+	}{
+		{0, 0},
+		{1, 0},
+		{0, 1},
+		{1, 1},
+		{2, 1},
+		{3, 1},
+		{3, 2},
+		{10, 0},
+		{0, 10},
+		{100, 10},
+		{100, 100},
+		{0, 100},
+	}
+	result := make([]Result, len(votes))
+	for i, v := range votes {
+		score := Wilson(v.upvotes, v.downvotes)
+		result[i] = Result{
+			Upvotes:   v.upvotes,
+			Downvotes: v.downvotes,
+			Score:     score,
+		}
+	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Score > result[j].Score
+	})
+	for idx, r := range result {
+		fmt.Printf("%2d. up=%-3d down=%-3d score=%+f\n", idx+1, r.Upvotes, r.Downvotes, r.Score)
+	}
+}
+```
+
 Output:
 
 ```
-1. upvotes=100 downvotes=0 score=0.979653
-2. upvotes=100 downvotes=10 score=0.890082
-3. upvotes=10 downvotes=0 score=0.817347
-4. upvotes=1000 downvotes=1000 score=0.499510
-5. upvotes=100 downvotes=100 score=0.495146
-6. upvotes=1 downvotes=1 score=0.213288
-7. upvotes=1 downvotes=0 score=0.206543
-8. upvotes=100 downvotes=1000 score=0.091820
-9. upvotes=0 downvotes=100 score=0.000000
-10. upvotes=0 downvotes=10 score=0.000000
-11. upvotes=0 downvotes=1 score=0.000000
-12. upvotes=0 downvotes=0 score=0.000000
+Wilson Score Ranking
+
+ 1. up=100 down=10  score=+0.840702
+ 2. up=10  down=0   score=+0.722460
+ 3. up=100 down=100 score=+0.431360
+ 4. up=3   down=1   score=+0.300636
+ 5. up=3   down=2   score=+0.230720
+ 6. up=2   down=1   score=+0.207655
+ 7. up=1   down=0   score=+0.206543
+ 8. up=1   down=1   score=+0.094529
+ 9. up=0   down=0   score=+0.000000
+10. up=0   down=1   score=-0.206543
+11. up=0   down=10  score=-0.722460
+12. up=0   down=100 score=-0.963005
 ```
 
 Here we can conclude several things:
@@ -142,52 +211,3 @@ The score returned from the recent submission (January 2017) is higher than that
 ## References:
 1. [How Not To Sort By Average Rating](http://www.evanmiller.org/how-not-to-sort-by-average-rating.html)
 2. [How Reddit Ranking Algorithm Works](https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-work-ef111e33d0d9)
-
-<!--
-
-
-// func main () {
-// 		log.Println(Hot(10, 100, time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)))
-// 		log.Println(Hot(10, 1000, time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)))
-// }
-// func main() {
-
-// 	votes := []struct {
-// 		upvotes, downvotes int64
-// 		score              float64
-// 	}{
-// 		{0, 100, 0},
-// 		{0, 10, 0},
-// 		{0, 1, 0},
-// 		{0, 0, 0},
-// 		{1, 0, 0},
-// 		{1, 1, 0},
-// 		{10, 0, 0},
-// 		{100, 0, 0},
-// 		{100, 10, 0},
-// 		{100, 100, 0},
-// 		{100, 1000, 0},
-// 		{1000, 1000, 0},
-// 	}
-
-// 	for i := 0; i < len(votes); i++ {
-// 		v := &votes[i]
-// 		v.score = Wilson(v.upvotes, v.downvotes)
-// 	}
-
-// 	sort.Slice(votes, func(i, j int) bool {
-// 		return votes[i].score > votes[j].score
-// 	})
-
-// 	for i := 0; i < len(votes); i++ {
-// 		v := votes[i]
-// 		ratio := 0.0
-// 		if v.downvotes != 0 {
-// 			ratio = float64(v.upvotes) / float64(v.downvotes)
-// 		} else {
-// 			ratio = float64(v.upvotes) / 1.0
-// 		}
-// 		log.Printf("%d. upvotes=%v downvotes=%v score=%4f ratio=%4f", i+1, v.upvotes, v.downvotes, v.score, ratio)
-// 	}
-// }
--->
